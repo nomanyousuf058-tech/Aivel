@@ -1,0 +1,40 @@
+{
+  "projects": [
+    {
+      "id": "1",
+      "name": "E-Commerce AI Platform",
+      "type": "web",
+      "description": "AI-powered e-commerce with personalized recommendations",
+      "status": "active",
+      "technologies": ["React", "Node.js", "MongoDB", "AI/ML"],
+      "repositoryUrl": "https://github.com/username/ecommerce-platform",
+      "liveUrl": "https://example-store.com",
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-15T10:30:00.000Z"
+    },
+    {
+      "id": "2",
+      "name": "API Gateway Service",
+      "type": "api",
+      "description": "Microservices API gateway with authentication",
+      "status": "active",
+      "technologies": ["Node.js", "Express", "JWT", "Docker"],
+      "repositoryUrl": "https://github.com/username/api-gateway",
+      "liveUrl": "https://api.example.com",
+      "createdAt": "2024-01-05T00:00:00.000Z",
+      "updatedAt": "2024-01-14T15:45:00.000Z"
+    },
+    {
+      "id": "3",
+      "name": "Mobile Banking App",
+      "type": "mobile",
+      "description": "Secure mobile banking application with biometric auth",
+      "status": "active",
+      "technologies": ["React Native", "Firebase", "Stripe"],
+      "repositoryUrl": "https://github.com/username/banking-app",
+      "liveUrl": "https://apps.apple.com/app/banking-app",
+      "createdAt": "2024-01-10T00:00:00.000Z",
+      "updatedAt": "2024-01-16T08:20:00.000Z"
+    }
+  ]
+}

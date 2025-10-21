@@ -1,0 +1,50 @@
+{
+  "content": [
+    {
+      "id": "1",
+      "title": "The Future of AI in Content Creation",
+      "summary": "Exploring how AI is revolutionizing content creation workflows and enabling new creative possibilities for businesses and individuals.",
+      "type": "blog",
+      "status": "published",
+      "createdAt": "2024-01-25T08:00:00Z",
+      "updatedAt": "2024-01-25T08:00:00Z",
+      "views": 1250,
+      "engagement": 85,
+      "affiliateLinks": [
+        {
+          "title": "AI Writing Tools Comparison",
+          "url": "https://example.com/ai-tools"
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "title": "AIVEL Platform Update - January 2024",
+      "summary": "Latest features and improvements to the AIVEL ecosystem, including new AI models and collaboration tools.",
+      "type": "news",
+      "status": "published",
+      "createdAt": "2024-01-20T10:30:00Z",
+      "updatedAt": "2024-01-20T10:30:00Z",
+      "views": 890,
+      "engagement": 72,
+      "affiliateLinks": []
+    },
+    {
+      "id": "3",
+      "title": "Maximizing Revenue with Digital Products",
+      "summary": "Strategies for creators to build and monetize digital products effectively using AI-powered tools.",
+      "type": "article",
+      "status": "published",
+      "createdAt": "2024-01-18T14:15:00Z",
+      "updatedAt": "2024-01-18T14:15:00Z",
+      "views": 1560,
+      "engagement": 91,
+      "affiliateLinks": [
+        {
+          "title": "Digital Product Marketing Guide",
+          "url": "https://example.com/marketing-guide"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "products": [
+    {
+      "id": "1",
+      "name": "AI Content Generator",
+      "description": "Generate high-quality content using advanced AI models",
+      "price": 49,
+      "category": "ai",
+      "features": ["Content Generation", "SEO Optimization", "Multiple Languages"],
+      "rating": 4.8,
+      "sales": 1250,
+      "status": "available",
+      "affiliateLink": "https://example.com/ai-content"
+    },
+    {
+      "id": "2",
+      "name": "E-commerce Template",
+      "description": "Professional e-commerce template with AI integration",
+      "price": 29,
+      "category": "template",
+      "features": ["Responsive Design", "AI Recommendations", "Payment Integration"],
+      "rating": 4.6,
+      "sales": 890,
+      "status": "available"
+    },
+    {
+      "id": "3",
+      "name": "SEO Analyzer Tool",
+      "description": "Comprehensive SEO analysis and optimization tool",
+      "price": 39,
+      "category": "tool",
+      "features": ["Keyword Analysis", "Competitor Tracking", "Performance Metrics"],
+      "rating": 4.7,
+      "sales": 670,
+      "status": "available"
+    },
+    {
+      "id": "4",
+      "name": "Premium Support Service",
+      "description": "24/7 premium technical support and consultation",
+      "price": 99,
+      "category": "service",
+      "features": ["24/7 Support", "Priority Response", "Expert Consultation"],
+      "rating": 4.9,
+      "sales": 340,
+      "status": "available"
+    },
+    {
+      "id": "5",
+      "name": "Social Media Manager",
+      "description": "AI-powered social media management and scheduling",
+      "price": 59,
+      "category": "ai",
+      "features": ["Auto Scheduling", "Analytics", "Content Suggestions"],
+      "rating": 4.5,
+      "sales": 520,
+      "status": "available"
+    },
+    {
+      "id": "6",
+      "name": "Portfolio Template",
+      "description": "Modern portfolio template for creatives and developers",
+      "price": 19,
+      "category": "template",
+      "features": ["Responsive Design", "Dark Mode", "Easy Customization"],
+      "rating": 4.4,
+      "sales": 780,
+      "status": "available"
+    }
+  ]
+}
