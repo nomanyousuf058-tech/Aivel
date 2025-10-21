@@ -1,0 +1,999 @@
+// Prisma Schema File
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  clerkId      String    @unique
+  email        String    @unique
+  name         String
+  avatar       String?
+  balance      Float     @default(0)
+  affiliateId  String    @unique
+  role         UserRole  @default(USER)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  projects     Project[]
+  revenues     Revenue[]
+  products     Product[]
+  contents     Content[]
+  
+  @@map("users")
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  name        String
+  type        ProjectType
+  description String?
+  status      ProjectStatus @default(STABLE)
+  userId      String
+  aiLogs      Json?
+  metrics     Json?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  lastAICheck DateTime      @default(now())
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  revenues    Revenue[]
+
+  @@map("projects")
+}
+
+model Revenue {
+  id           String       @id @default(cuid())
+  amount       Float
+  type         RevenueType
+  description  String
+  userId       String
+  projectId    String?
+  productId    String?
+  contentId    String?
+  ownerShare   Float        // 70% of amount
+  growthFund   Float        // 30% of amount
+  createdAt    DateTime     @default(now())
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project      Project?     @relation(fields: [projectId], references: [id])
+  product      Product?     @relation(fields: [productId], references: [id], name: "ProductRevenue")
+  content      Content?     @relation(fields: [contentId], references: [id], name: "ContentRevenue")
+  
+  @@map("revenues")
+}
+
+model Product {
+  id          String        @id @default(cuid())
+  name        String
+  description String
+  type        ProductType
+  price       Float
+  sellerId    String
+  commission  Float         @default(30) // 30% commission
+  salesCount  Int           @default(0)
+  rating      Float?
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  seller      User          @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  revenues    Revenue[]     @relation("ProductRevenue")
+
+  @@map("products")
+}
+
+model Content {
+  id             String        @id @default(cuid())
+  title          String
+  body           String
+  type           ContentType
+  status         ContentStatus @default(DRAFT)
+  affiliateLinks Json?         // Array of affiliate links
+  seoTags        String[]      // SEO tags array
+  aiGenerated    Boolean       @default(false)
+  userId         String
+  revenue        Float         @default(0)
+  wordCount      Int
+  publishedAt    DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  revenues       Revenue[]     @relation("ContentRevenue")
+
+  @@map("content")
+}
+
+model AITask {
+  id          String   @id @default(cuid())
+  name        String   // e.g., "daily-scan", "weekly-analysis"
+  status      TaskStatus @default(PENDING)
+  startedAt   DateTime?
+  completedAt DateTime?
+  result      Json?    // Store task output
+  error       String?
+  createdAt   DateTime @default(now())
+  
+  @@map("ai_tasks")
+}
+
+model InvestmentProposal {
+  id           String   @id @default(cuid())
+  title        String
+  description  String
+  cost         Float
+  expectedROI  Float    // Expected return on investment (percentage)
+  riskLevel    RiskLevel @default(MEDIUM)
+  status       ProposalStatus @default(PROPOSED)
+  proposedBy   String   @default("AI") // "AI" or "Admin"
+  approvedAt   DateTime?
+  executedAt   DateTime?
+  result       Json?    // Store execution results
+  createdAt    DateTime @default(now())
+  
+  @@map("investment_proposals")
+}
+
+model SystemFund {
+  id            String @id @default(cuid())
+  growthFund    Float  @default(0)
+  ownerBalance  Float  @default(0)
+  totalRevenue  Float  @default(0)
+  monthlyBudget Float  @default(10000) // PKR 10,000 default monthly budget
+  autoInvest    Boolean @default(false) // Auto-apply investments
+  autoDeployEnabled Boolean @default(false) // Auto-deploy changes
+  lastUpdated   DateTime @default(now())
+
+  @@map("system_funds")
+}
+
+model AILog {
+  id        String   @id @default(cuid())
+  date      DateTime @default(now())
+  type      AILogType
+  summary   String
+  details   Json?
+  agent     String?  // Which AI agent created this
+  confidence Float?  // Confidence score 0-1
+  costEstimate Float?
+  projectsAnalyzed Int
+  issuesFixed Int
+  revenueGenerated Float
+  createdAt DateTime @default(now())
+
+  @@map("ai_logs")
+}
+
+model NewsFeed {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  url         String
+  source      String
+  category    String
+  imageUrl    String?
+  publishedAt DateTime
+  createdAt   DateTime @default(now())
+
+  @@map("news_feed")
+}
+
+// Auto-Upgrade System Models
+model UpgradeProposal {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  category    UpgradeCategory
+  priority    UpgradePriority @default(MEDIUM)
+  changes     Json?           // Code changes or configuration updates
+  status      UpgradeStatus   @default(PROPOSED)
+  proposedBy  String          @default("AI") // "AI" or "Admin"
+  
+  // Safety checks
+  safetyScore Float     @default(1.0) // 0-1 scale, 1 = completely safe
+  riskAnalysis Json?    // AI-generated risk analysis
+  testsPassed  Boolean  @default(false)
+  
+  // Execution tracking
+  approvedAt   DateTime?
+  testedAt     DateTime?
+  deployedAt   DateTime?
+  rolledBackAt DateTime?
+  
+  // Results
+  testResults   Json?
+  deployResults Json?
+  rollbackReason String?
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  tests       UpgradeTest[]
+  deployments Deployment[]
+  
+  @@map("upgrade_proposals")
+}
+
+model UpgradeTest {
+  id          String   @id @default(cuid())
+  proposalId  String
+  testType    TestType
+  status      TestStatus @default(PENDING)
+  results     Json?
+  logs        String?
+  duration    Int?     // Duration in milliseconds
+  createdAt   DateTime @default(now())
+  completedAt DateTime?
+  
+  proposal    UpgradeProposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  
+  @@map("upgrade_tests")
+}
+
+model Deployment {
+  id          String   @id @default(cuid())
+  proposalId  String
+  environment DeploymentEnvironment @default(STAGING)
+  status      DeploymentStatus @default(PENDING)
+  logs        String?
+  duration    Int?     // Duration in milliseconds
+  deployedAt  DateTime?
+  createdAt   DateTime @default(now())
+  
+  proposal    UpgradeProposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  
+  @@map("deployments")
+}
+
+model SystemConfig {
+  id                String   @id @default(cuid())
+  key               String   @unique
+  value             String
+  description       String?
+  category          String   @default("general")
+  isSecret          Boolean  @default(false)
+  updatedAt         DateTime @updatedAt
+  updatedBy         String   @default("system")
+  
+  @@map("system_configs")
+}
+
+// Experimentation System Models
+model Experiment {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  description  String
+  hypothesis   String   // What we're testing
+  status       ExperimentStatus @default(DRAFT)
+  category     ExperimentCategory
+  
+  // Variants
+  variants     Json     // Array of variant configurations
+  targetAudience String? // Who this experiment targets
+  
+  // Traffic allocation
+  trafficAllocation Float @default(1.0) // 0-1, what % of traffic gets the experiment
+  variantWeights    Json? // Custom weights for each variant
+  
+  // Goals and metrics
+  primaryMetric     String
+  secondaryMetrics  String[]
+  successThreshold  Float? // Minimum improvement to declare success
+  
+  // Timing
+  startDate    DateTime?
+  endDate      DateTime?
+  estimatedDuration Int? // Days
+  
+  // Results
+  results      Json?
+  winnerVariant String?
+  confidence   Float?
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  variantsList ExperimentVariant[]
+  events       ExperimentEvent[]
+  summaries    ExperimentSummary[]
+  
+  @@map("experiments")
+}
+
+model ExperimentVariant {
+  id           String   @id @default(cuid())
+  experimentId String
+  name         String   // e.g., "control", "treatment_A"
+  config       Json     // Variant-specific configuration
+  allocation   Float    @default(0.5) // Traffic allocation for this variant
+  
+  experiment   Experiment @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+  
+  @@map("experiment_variants")
+}
+
+model ExperimentEvent {
+  id           String   @id @default(cuid())
+  experimentId String
+  variantName  String
+  userId       String?
+  sessionId    String
+  eventType    ExperimentEventType
+  eventValue   Float?   // For numeric events like revenue
+  metadata     Json?
+  
+  experiment   Experiment @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+  
+  createdAt    DateTime @default(now())
+  
+  @@index([experimentId, variantName])
+  @@index([eventType])
+  @@map("experiment_events")
+}
+
+model ExperimentSummary {
+  id           String   @id @default(cuid())
+  experimentId String
+  variantName  String
+  date         DateTime // Date of the summary
+  
+  // Metrics
+  participants Int      @default(0)
+  conversions  Int      @default(0)
+  totalValue   Float    @default(0) // Sum of event values
+  averageValue Float    @default(0) // Average event value
+  
+  // Statistical significance
+  pValue       Float?   // Statistical significance
+  confidenceInterval Json?
+  
+  experiment   Experiment @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+  
+  @@unique([experimentId, variantName, date])
+  @@map("experiment_summaries")
+}
+
+// AI Agents System Models
+model AIAgent {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String
+  role        AgentRole
+  status      AgentStatus @default(ACTIVE)
+  
+  // Capabilities
+  capabilities String[] // What this agent can do
+  permissions  Json?    // Specific permissions and limits
+  
+  // Performance tracking
+  successRate  Float    @default(0.0)
+  tasksCompleted Int    @default(0)
+  avgConfidence Float   @default(0.0)
+  
+  // Safety controls
+  minConfidenceThreshold Float @default(0.8)
+  maxCostPerTask   Float @default(100.0)
+  requireHumanApproval Boolean @default(false)
+  
+  // Configuration
+  systemPrompt  String?
+  model         String   @default("gpt-4")
+  temperature   Float    @default(0.3)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  tasks        AgentTask[]
+  
+  @@map("ai_agents")
+}
+
+model AgentTask {
+  id          String   @id @default(cuid())
+  agentId     String
+  type        TaskType
+  status      TaskStatus @default(PENDING)
+  
+  // Input/Output
+  input       Json?
+  output      Json?
+  reasoning   String?   // AI's reasoning trace
+  
+  // Performance metrics
+  confidence  Float?
+  costEstimate Float?
+  actualCost  Float?
+  duration    Int?      // milliseconds
+  
+  // Safety checks
+  safetyScore Float?
+  riskAnalysis Json?
+  requireApproval Boolean @default(false)
+  
+  // Approval workflow
+  approvedBy  String?   // User ID who approved
+  approvedAt  DateTime?
+  rejectedReason String?
+  
+  createdAt   DateTime @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+  
+  agent       AIAgent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  
+  @@map("agent_tasks")
+}
+
+model AgentPolicy {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String
+  scope       PolicyScope @default(SYSTEM)
+  
+  // Rules
+  conditions  Json     // When this policy applies
+  actions     Json     // What actions to take
+  constraints Json     // Limitations and boundaries
+  
+  // Enforcement
+  priority    Int      @default(1)
+  isActive    Boolean  @default(true)
+  autoEnforce Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("agent_policies")
+}
+
+// Audit & Monitoring System Models
+model SystemAudit {
+  id          String   @id @default(cuid())
+  action      String   // What action was performed
+  resource    String   // What resource was affected
+  resourceId  String?  // ID of the affected resource
+  userId      String?  // Who performed the action
+  userAgent   String?  // User agent string
+  ipAddress   String?  // IP address
+  
+  // Changes
+  oldValues   Json?    // Previous state
+  newValues   Json?    // New state
+  changes     Json?    // Diff of changes
+  
+  // Context
+  context     Json?    // Additional context
+  severity    AuditSeverity @default(INFO)
+  
+  // Status
+  status      AuditStatus @default(SUCCESS)
+  error       String?
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([action])
+  @@index([resource])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("system_audits")
+}
+
+model RateLimit {
+  id          String   @id @default(cuid())
+  key         String   // Rate limit key (user_id, ip, agent_id, etc.)
+  type        RateLimitType
+  count       Int      @default(1)
+  windowStart DateTime @default(now())
+  windowEnd   DateTime
+  expiresAt   DateTime
+  
+  @@unique([key, type, windowStart])
+  @@index([key, type])
+  @@index([expiresAt])
+  @@map("rate_limits")
+}
+
+model SafetyCheck {
+  id          String   @id @default(cuid())
+  checkType   SafetyCheckType
+  targetType  String   // What is being checked (agent, task, user, etc.)
+  targetId    String   // ID of the target
+  status      SafetyStatus @default(PASSED)
+  
+  // Check details
+  rules       Json     // Rules that were checked
+  violations  String[] // Any violations found
+  score       Float    // 0-1 safety score
+  
+  // Context
+  context     Json?
+  triggeredBy String?  // What triggered this check
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([targetType, targetId])
+  @@index([checkType])
+  @@index([status])
+  @@index([createdAt])
+  @@map("safety_checks")
+}
+
+model SystemAlert {
+  id          String   @id @default(cuid())
+  type        AlertType
+  title       String
+  message     String
+  severity    AlertSeverity @default(MEDIUM)
+  
+  // Alert details
+  data        Json?    // Additional alert data
+  source      String?  // What generated the alert
+  
+  // Status
+  status      AlertStatus @default(ACTIVE)
+  acknowledgedBy String? // Who acknowledged the alert
+  acknowledgedAt DateTime?
+  resolvedBy  String?   // Who resolved the alert
+  resolvedAt  DateTime?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([type])
+  @@index([severity])
+  @@index([status])
+  @@index([createdAt])
+  @@map("system_alerts")
+}
+
+model MonthlyBudget {
+  id          String   @id @default(cuid())
+  month       DateTime // First day of the month
+  category    BudgetCategory
+  allocated   Float    // Allocated amount
+  spent       Float    @default(0) // Amount spent so far
+  limitType   LimitType @default(SOFT) // SOFT or HARD limit
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([month, category])
+  @@map("monthly_budgets")
+}
+
+// Payout System Models
+model Payout {
+  id          String   @id @default(cuid())
+  ownerId     String   // Reference to the owner user
+  amount      Float    // Amount to be paid out
+  status      PayoutStatus @default(PENDING)
+  type        PayoutType @default(REVENUE_SHARE)
+  
+  // Revenue period this payout covers
+  periodStart DateTime
+  periodEnd   DateTime
+  
+  // Calculation details
+  totalRevenue    Float  // Total revenue in the period
+  growthFund      Float  // 30% allocated to growth fund
+  ownerShare      Float  // 70% allocated to owner
+  fees            Float? // Any processing fees
+  netAmount       Float  // Amount after fees
+  
+  // Payment details
+  paymentMethod   String? // bank_transfer, crypto, etc.
+  transactionId   String? // External transaction ID
+  processedAt     DateTime?
+  completedAt     DateTime?
+  
+  // Metadata
+  description     String?
+  notes           String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@map("payouts")
+}
+
+model RevenuePeriod {
+  id          String   @id @default(cuid())
+  startDate   DateTime
+  endDate     DateTime
+  status      PeriodStatus @default(ACTIVE)
+  
+  // Revenue totals
+  totalRevenue    Float @default(0)
+  growthFund      Float @default(0) // 30%
+  ownerBalance    Float @default(0) // 70%
+  
+  // Payout status
+  payoutId     String? // Linked payout if created
+  autoPayout   Boolean @default(true)
+  
+  // Metrics
+  transactionCount Int @default(0)
+  averageTransaction Float @default(0)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([startDate, endDate])
+  @@map("revenue_periods")
+}
+
+model PayoutMethod {
+  id          String   @id @default(cuid())
+  ownerId     String
+  type        PayoutMethodType @default(BANK_TRANSFER)
+  isDefault   Boolean @default(false)
+  
+  // Method details (encrypted in production)
+  details     Json?
+  
+  // Verification
+  isVerified  Boolean @default(false)
+  verifiedAt  DateTime?
+  
+  // Status
+  status      PayoutMethodStatus @default(ACTIVE)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("payout_methods")
+}
+
+model PayoutRule {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  type        RuleType
+  
+  // Conditions
+  conditions  Json
+  actions     Json
+  
+  // Execution
+  priority    Int @default(1)
+  isActive    Boolean @default(true)
+  lastTriggered DateTime?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("payout_rules")
+}
+
+// Existing Enums
+enum UserRole {
+  USER
+  ADMIN
+  OWNER
+}
+
+enum ProjectType {
+  WEB
+  MOBILE
+  AI
+  API
+  OTHER
+}
+
+enum ProjectStatus {
+  STABLE
+  MINOR
+  CRITICAL
+}
+
+enum RevenueType {
+  AFFILIATE
+  PRODUCT_SALE
+  COURSE
+  SERVICE
+  CONTENT
+}
+
+enum ProductType {
+  TOOL
+  COURSE
+  TEMPLATE
+  SERVICE
+}
+
+enum ContentType {
+  BLOG
+  ARTICLE
+  NEWS
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  SCHEDULED
+}
+
+enum TaskStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum ProposalStatus {
+  PROPOSED
+  APPROVED
+  REJECTED
+  EXECUTED
+  FAILED
+}
+
+enum AILogType {
+  PROJECT_ANALYSIS
+  CONTENT_GENERATION
+  REVENUE_REPORT
+  SYSTEM_UPDATE
+  GROWTH_DECISION
+  INVESTMENT_PROPOSAL
+  TASK_EXECUTION
+  SAFETY_CHECK
+}
+
+// New enums for upgrade system
+enum UpgradeCategory {
+  CODE_IMPROVEMENT
+  PERFORMANCE
+  SECURITY
+  FEATURE
+  DEPENDENCY_UPDATE
+  CONFIG_CHANGE
+  BUG_FIX
+}
+
+enum UpgradePriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum UpgradeStatus {
+  PROPOSED
+  APPROVED
+  TESTING
+  TEST_FAILED
+  READY_FOR_DEPLOY
+  DEPLOYING
+  DEPLOYED
+  FAILED
+  ROLLED_BACK
+  REJECTED
+}
+
+enum TestType {
+  UNIT_TEST
+  INTEGRATION_TEST
+  SAFETY_CHECK
+  PERFORMANCE_TEST
+  SECURITY_SCAN
+}
+
+enum TestStatus {
+  PENDING
+  RUNNING
+  PASSED
+  FAILED
+  SKIPPED
+}
+
+enum DeploymentEnvironment {
+  STAGING
+  PRODUCTION
+}
+
+enum DeploymentStatus {
+  PENDING
+  RUNNING
+  SUCCESS
+  FAILED
+  ROLLED_BACK
+}
+
+// New enums for experimentation system
+enum ExperimentStatus {
+  DRAFT
+  RUNNING
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum ExperimentCategory {
+  UI_UX
+  PERFORMANCE
+  FEATURE
+  PRICING
+  CONTENT
+  MARKETING
+  ONBOARDING
+}
+
+enum ExperimentEventType {
+  IMPRESSION    // User saw the variant
+  ENGAGEMENT    // User interacted
+  CONVERSION    // User completed goal
+  REVENUE       // Revenue generated
+  RETENTION     // User returned
+  BOUNCE        // User left quickly
+}
+
+// New enums for AI agents system
+enum AgentRole {
+  CODE_FIXER
+  OPPORTUNITY_FINDER
+  MARKETING_OPTIMIZER
+  SECURITY_GUARDIAN
+  PERFORMANCE_ANALYST
+  CONTENT_CREATOR
+  BUSINESS_ANALYST
+  SYSTEM_MAINTAINER
+}
+
+enum AgentStatus {
+  ACTIVE
+  PAUSED
+  DISABLED
+  TRAINING
+}
+
+enum TaskType {
+  CODE_ANALYSIS
+  BUG_FIX
+  PERFORMANCE_OPTIMIZATION
+  SECURITY_SCAN
+  CONTENT_GENERATION
+  MARKETING_STRATEGY
+  INVESTMENT_ANALYSIS
+  SYSTEM_UPGRADE
+  EXPERIMENT_DESIGN
+  RISK_ASSESSMENT
+}
+
+enum PolicyScope {
+  SYSTEM
+  AGENT
+  TASK_TYPE
+  USER
+}
+
+// New enums for audit system
+enum AuditSeverity {
+  DEBUG
+  INFO
+  WARNING
+  ERROR
+  CRITICAL
+}
+
+enum AuditStatus {
+  SUCCESS
+  FAILURE
+  UNAUTHORIZED
+}
+
+enum RateLimitType {
+  API_REQUEST
+  AGENT_TASK
+  USER_ACTION
+  SYSTEM_OPERATION
+}
+
+enum SafetyCheckType {
+  PRE_TASK
+  POST_TASK
+  PERIODIC
+  MANUAL
+  AUTOMATED
+}
+
+enum SafetyStatus {
+  PASSED
+  WARNING
+  FAILED
+  BLOCKED
+}
+
+enum AlertType {
+  BUDGET_EXCEEDED
+  RATE_LIMIT_EXCEEDED
+  SAFETY_VIOLATION
+  SYSTEM_ERROR
+  PERFORMANCE_DEGRADATION
+  SECURITY_THREAT
+}
+
+enum AlertSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AlertStatus {
+  ACTIVE
+  ACKNOWLEDGED
+  RESOLVED
+  DISMISSED
+}
+
+enum BudgetCategory {
+  AI_API_COSTS
+  INFRASTRUCTURE
+  MARKETING
+  DEVELOPMENT
+  OPERATIONS
+}
+
+enum LimitType {
+  SOFT
+  HARD
+}
+
+// New enums for payout system
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+  HOLD
+}
+
+enum PayoutType {
+  REVENUE_SHARE
+  MANUAL
+  BONUS
+  ADJUSTMENT
+}
+
+enum PeriodStatus {
+  ACTIVE
+  CLOSED
+  PROCESSED
+}
+
+enum PayoutMethodType {
+  BANK_TRANSFER
+  CRYPTO
+  PAYPAL
+  WISE
+  OTHER
+}
+
+enum PayoutMethodStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum RuleType {
+  AUTO_PAYOUT
+  MINIMUM_PAYOUT
+  TAX_WITHHOLDING
+  FEE_CALCULATION
+}

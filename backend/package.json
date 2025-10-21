@@ -1,0 +1,40 @@
+{
+  "name": "aivel-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start -p 3000"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@prisma/client": "^6.17.1",
+    "@types/node": "24.7.2",
+    "@types/react": "19.2.2",
+    "prisma": "^6.17.1",
+    "typescript": "5.9.3"
+  },
+  "dependencies": {
+    "@clerk/backend": "^2.17.2",
+    "@clerk/nextjs": "^6.33.3",
+    "axios": "^1.12.2",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.546.0",
+    "next": "^15.5.5",
+    "node-cron": "^4.2.1",
+    "openai": "^6.3.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "svix": "^1.77.0",
+    "tailwind-merge": "^3.3.1",
+    "zod": "^3.23.8"
+  }
+}
